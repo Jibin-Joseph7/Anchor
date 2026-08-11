@@ -17,6 +17,7 @@ app.get("/api/health", (req, res) => {
     service: "anchor-crm-api",
   });
 });
+app.use("/api/auth", require("./routes/authRoutes"));
 
 const PORT = process.env.PORT || 5000;
 
