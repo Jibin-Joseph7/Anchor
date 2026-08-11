@@ -24,6 +24,7 @@ app.use(
   "/api/opportunities",
   require("./routes/opportunityRoutes")
 );
+app.use("/api/tasks", require("./routes/taskRoutes"));
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
