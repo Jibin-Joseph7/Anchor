@@ -1,10 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import api from "../api/axios";
+import api from "../api/axios.js";
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem("anchor_user");
+    return stored ? JSON.parse(stored) : null;
+  });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,51 +21,41 @@ export function AuthProvider({ children }) {
 
     api
       .get("/auth/me")
-      .then((response) => {
-        setUser(response.data);
+      .then(({ data }) => {
+        setUser(data.user);
+        localStorage.setItem("anchor_user", JSON.stringify(data.user));
       })
       .catch(() => {
         localStorage.removeItem("anchor_token");
         localStorage.removeItem("anchor_user");
         setUser(null);
       })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (email, password) => {
-    const response = await api.post("/auth/login", {
+    const { data } = await api.post("/auth/login", {
       email,
       password,
     });
 
-    const { token, user } = response.data;
+    localStorage.setItem("anchor_token", data.token);
+    localStorage.setItem("anchor_user", JSON.stringify(data.user));
 
-    localStorage.setItem("anchor_token", token);
-    localStorage.setItem("anchor_user", JSON.stringify(user));
+    setUser(data.user);
 
-    setUser(user);
-
-    return user;
+    return data.user;
   };
 
-  const register = async (name, email, password, role = "sales_executive") => {
-    const response = await api.post("/auth/register", {
-      name,
-      email,
-      password,
-      role,
-    });
+  const register = async (payload) => {
+    const { data } = await api.post("/auth/register", payload);
 
-    const { token, user } = response.data;
+    localStorage.setItem("anchor_token", data.token);
+    localStorage.setItem("anchor_user", JSON.stringify(data.user));
 
-    localStorage.setItem("anchor_token", token);
-    localStorage.setItem("anchor_user", JSON.stringify(user));
+    setUser(data.user);
 
-    setUser(user);
-
-    return user;
+    return data.user;
   };
 
   const logout = () => {
@@ -72,19 +66,11 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        register,
-        logout,
-      }}
+      value={{ user, loading, login, register, logout }}
     >
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(AuthContext);
