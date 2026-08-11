@@ -20,7 +20,10 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/customers", require("./routes/customerRoutes"));
 app.use("/api/leads", require("./routes/leadRoutes"));
-
+app.use(
+  "/api/opportunities",
+  require("./routes/opportunityRoutes")
+);
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
