@@ -18,6 +18,8 @@ app.get("/api/health", (req, res) => {
   });
 });
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/customers", require("./routes/customerRoutes"));
+app.use("/api/customers", require("./routes/customerRoutes"));
 
 const PORT = process.env.PORT || 5000;
 
