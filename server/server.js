@@ -25,6 +25,7 @@ app.use(
   require("./routes/opportunityRoutes")
 );
 app.use("/api/tasks", require("./routes/taskRoutes"));
+app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
