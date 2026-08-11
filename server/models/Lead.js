@@ -72,20 +72,8 @@ const leadSchema = new mongoose.Schema(
   }
 );
 
-// Useful for searching leads
-leadSchema.index({
-  name: "text",
-  email: "text",
-  company: "text",
-});
-
-// Prevent duplicate active leads by email
-leadSchema.index(
-  { email: 1 },
-  {
-    unique: true,
-    sparse: true,
-  }
-);
+leadSchema.index({ email: 1 });
+leadSchema.index({ status: 1 });
+leadSchema.index({ owner: 1 });
 
 module.exports = mongoose.model("Lead", leadSchema);

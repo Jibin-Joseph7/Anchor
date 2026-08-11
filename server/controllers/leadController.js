@@ -4,31 +4,28 @@ const Customer = require("../models/Customer");
 // GET /api/leads
 exports.getLeads = async (req, res) => {
   try {
-    const {
-      search = "",
-      status,
-      page = 1,
-      limit = 10,
-    } = req.query;
+    const { search = "", status, page = 1, limit = 10 } = req.query;
 
-    const pageNumber = Math.max(Number(page), 1);
-    const limitNumber = Math.min(Math.max(Number(limit), 1), 100);
+    const query = {
+      ...(status ? { status } : {}),
+      ...(search
+        ? {
+            $or: [
+              { name: { $regex: search, $options: "i" } },
+              { email: { $regex: search, $options: "i" } },
+              { company: { $regex: search, $options: "i" } },
+            ],
+          }
+        : {}),
+    };
 
-    const query = {};
-
-    if (search) {
-      query.$text = { $search: search };
-    }
-
-    if (status) {
-      query.status = status;
-    }
-
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
     const skip = (pageNumber - 1) * limitNumber;
 
     const [leads, total] = await Promise.all([
       Lead.find(query)
-        .populate("owner", "name email role")
+        .populate("owner", "name email")
         .populate("convertedToCustomer", "name email")
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -43,10 +40,8 @@ exports.getLeads = async (req, res) => {
       page: pageNumber,
       pages: Math.ceil(total / limitNumber),
     });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -54,43 +49,25 @@ exports.getLeads = async (req, res) => {
 exports.getLead = async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.id)
-      .populate("owner", "name email role")
+      .populate("owner", "name email")
       .populate("convertedToCustomer", "name email");
 
     if (!lead) {
-      return res.status(404).json({
-        message: "Lead not found",
-      });
+      return res.status(404).json({ message: "Lead not found" });
     }
 
     res.json(lead);
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
 // POST /api/leads
 exports.createLead = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      phone,
-      company,
-      source,
-      status,
-      notes,
-    } = req.body;
+    const { email } = req.body;
 
-    if (!name) {
-      return res.status(400).json({
-        message: "Lead name is required",
-      });
-    }
-
-    // Prevent duplicate leads by email
+    // Prevent duplicate leads with the same email
     if (email) {
       const existingLead = await Lead.findOne({
         email: email.toLowerCase(),
@@ -99,27 +76,18 @@ exports.createLead = async (req, res) => {
       if (existingLead) {
         return res.status(409).json({
           message: "A lead with this email already exists",
-          lead: existingLead,
         });
       }
     }
 
     const lead = await Lead.create({
-      name,
-      email,
-      phone,
-      company,
-      source,
-      status,
-      notes,
+      ...req.body,
       owner: req.user._id,
     });
 
     res.status(201).json(lead);
-  } catch (error) {
-    res.status(400).json({
-      message: error.message,
-    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 };
 
@@ -136,16 +104,12 @@ exports.updateLead = async (req, res) => {
     );
 
     if (!lead) {
-      return res.status(404).json({
-        message: "Lead not found",
-      });
+      return res.status(404).json({ message: "Lead not found" });
     }
 
     res.json(lead);
-  } catch (error) {
-    res.status(400).json({
-      message: error.message,
-    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 };
 
@@ -155,18 +119,12 @@ exports.deleteLead = async (req, res) => {
     const lead = await Lead.findByIdAndDelete(req.params.id);
 
     if (!lead) {
-      return res.status(404).json({
-        message: "Lead not found",
-      });
+      return res.status(404).json({ message: "Lead not found" });
     }
 
-    res.json({
-      message: "Lead deleted successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+    res.json({ message: "Lead deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -176,9 +134,7 @@ exports.convertLead = async (req, res) => {
     const lead = await Lead.findById(req.params.id);
 
     if (!lead) {
-      return res.status(404).json({
-        message: "Lead not found",
-      });
+      return res.status(404).json({ message: "Lead not found" });
     }
 
     if (lead.convertedToCustomer) {
@@ -187,26 +143,14 @@ exports.convertLead = async (req, res) => {
       });
     }
 
-    // Check whether a customer with this email already exists
-    let customer = null;
-
-    if (lead.email) {
-      customer = await Customer.findOne({
-        email: lead.email.toLowerCase(),
-      });
-    }
-
-    // Create customer if one doesn't exist
-    if (!customer) {
-      customer = await Customer.create({
-        name: lead.name,
-        email: lead.email,
-        phone: lead.phone,
-        company: lead.company,
-        notes: lead.notes,
-        owner: lead.owner || req.user._id,
-      });
-    }
+    const customer = await Customer.create({
+      name: lead.name,
+      email: lead.email,
+      phone: lead.phone,
+      company: lead.company,
+      notes: lead.notes,
+      owner: lead.owner || req.user._id,
+    });
 
     lead.convertedToCustomer = customer._id;
     lead.status = "won";
@@ -218,9 +162,7 @@ exports.convertLead = async (req, res) => {
       lead,
       customer,
     });
-  } catch (error) {
-    res.status(400).json({
-      message: error.message,
-    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 };

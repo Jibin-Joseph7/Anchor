@@ -11,10 +11,7 @@ const {
   convertLead,
 } = require("../controllers/leadController");
 
-const {
-  protect,
-  authorize,
-} = require("../middleware/auth");
+const { protect, authorize } = require("../middleware/auth");
 
 // All lead routes require authentication
 router.use(protect);
