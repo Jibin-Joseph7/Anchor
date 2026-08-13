@@ -38,7 +38,7 @@ export default function App() {
         }
       />
 
-      {/* 👇 PUT LEADS HERE */}
+      {/* Leads */}
       <Route
         path="/leads"
         element={
@@ -50,7 +50,7 @@ export default function App() {
         }
       />
 
-      {/* 👇 PUT CUSTOMERS HERE */}
+      {/* Customers */}
       <Route
         path="/customers"
         element={

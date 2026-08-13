@@ -784,3 +784,86 @@ button {
   opacity: 0.4;
   cursor: not-allowed;
 }
+/* Pipeline board */
+.pipeline-board {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.pipeline-column {
+  background: #eef1f6;
+  border-radius: 10px;
+  min-width: 220px;
+  flex-shrink: 0;
+  padding: 10px;
+}
+
+.pipeline-column-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--anchor-navy);
+  padding: 4px 6px 10px;
+}
+
+.pipeline-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pipeline-card {
+  background: #fff;
+  border: 1px solid var(--anchor-border);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.pipeline-card-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.pipeline-card-sub {
+  font-size: 12px;
+  color: var(--anchor-muted);
+}
+
+.pipeline-card-value {
+  font-size: 13px;
+  color: var(--anchor-success);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.pipeline-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pipeline-card-actions button {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+/* Tasks */
+.overdue-row {
+  background: #fef2f2;
+}
+
+.status-toggle {
+  border: 1px solid var(--anchor-border);
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
