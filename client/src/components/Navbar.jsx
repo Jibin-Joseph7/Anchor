@@ -1,55 +1,46 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+
+import { NavLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
+
+const links = [
+  { to: "/", label: "Dashboard", end: true },
+  { to: "/leads", label: "Leads" },
+  { to: "/customers", label: "Customers" },
+  { to: "/pipeline", label: "Pipeline" },
+  { to: "/tasks", label: "Tasks" },
+];
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  const links = [
-    { name: "Dashboard", path: "/" },
-    { name: "Leads", path: "/leads" },
-    { name: "Customers", path: "/customers" },
-    { name: "Pipeline", path: "/pipeline" },
-    { name: "Tasks", path: "/tasks" },
-  ];
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">
-        ⚓ Anchor CRM
-      </div>
+      <div className="sidebar-brand">⚓ Anchor</div>
 
       <nav className="sidebar-links">
         {links.map((link) => (
           <NavLink
-            key={link.path}
-            to={link.path}
-            end={link.path === "/"}
+            key={link.to}
+            to={link.to}
+            end={link.end}
             className={({ isActive }) =>
-              `sidebar-link ${isActive ? "active" : ""}`
+              "sidebar-link" + (isActive ? " active" : "")
             }
           >
-            {link.name}
+            {link.label}
           </NavLink>
         ))}
       </nav>
 
       <div className="sidebar-user">
-        <div className="sidebar-user-name">
-          {user?.name || "User"}
-        </div>
+        <div className="sidebar-user-name">{user?.name}</div>
 
         <div className="sidebar-user-role">
-          {user?.role || "User"}
+          {user?.role?.replace("_", " ")}
         </div>
 
-        <button className="btn-logout" onClick={handleLogout}>
-          Logout
+        <button className="btn-logout" onClick={logout}>
+          Log out
         </button>
       </div>
     </aside>
