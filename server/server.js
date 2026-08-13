@@ -26,6 +26,8 @@ app.use(
 );
 app.use("/api/tasks", require("./routes/taskRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
+import Leads from "./pages/Leads.jsx";
+import Customers from "./pages/Customers.jsx";
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
