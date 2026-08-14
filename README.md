@@ -86,10 +86,11 @@ A routes file is importing a controller function that no longer exists
 `exports.xxx` names actually defined in the controller.
 
 **Screenshots of Live Demo**
-[<img width="1901" height="900" alt="Screenshot 2026-08-14 082449" src="https://github.com/user-attachments/assets/d915b827-4c70-444e-af92-4eea2a11ae3e" />]
+<img width="1902" height="890" alt="Screenshot 2026-08-13 175821" src="https://github.com/user-attachments/assets/c596428c-b5af-4647-8644-25dbefcd7c72" />
+
 <br>
 <br>
-[<img width="1901" height="900" alt="Screenshot 2026-08-14 082449" src="https://github.com/user-attachments/assets/d142a576-7bec-4bc7-821e-ee12bb92402b" />]
+<img width="1901" height="900" alt="Screenshot 2026-08-14 082449" src="https://github.com/user-attachments/assets/d142a576-7bec-4bc7-821e-ee12bb92402b" />
 
 
 
