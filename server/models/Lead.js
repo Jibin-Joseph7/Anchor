@@ -2,78 +2,30 @@ const mongoose = require("mongoose");
 
 const leadSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    email: {
-      type: String,
-      trim: true,
-      lowercase: true,
-    },
-
-    phone: {
-      type: String,
-      trim: true,
-    },
-
-    company: {
-      type: String,
-      trim: true,
-    },
-
+    name: { type: String, required: true, trim: true },
+    company: { type: String, trim: true },
+    email: { type: String, trim: true, lowercase: true },
+    phone: { type: String, trim: true },
     source: {
       type: String,
-      enum: [
-        "website",
-        "referral",
-        "social_media",
-        "advertisement",
-        "cold_call",
-        "other",
-      ],
-      default: "other",
+      enum: ["Website", "Referral", "Cold Call", "Social Media", "Advertisement", "Other"],
+      default: "Other",
     },
-
     status: {
       type: String,
-      enum: [
-        "new",
-        "contacted",
-        "qualified",
-        "proposal",
-        "negotiation",
-        "won",
-        "lost",
-      ],
-      default: "new",
+      enum: ["New", "Contacted", "Qualified", "Unqualified", "Converted"],
+      default: "New",
     },
-
-    notes: {
-      type: String,
-      trim: true,
-    },
-
-    owner: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-
-    convertedToCustomer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
-      default: null,
-    },
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    notes: { type: String, trim: true },
+    convertedCustomer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", default: null },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-leadSchema.index({ email: 1 });
-leadSchema.index({ status: 1 });
-leadSchema.index({ owner: 1 });
+leadSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { email: { $type: "string" } } }
+);
 
 module.exports = mongoose.model("Lead", leadSchema);

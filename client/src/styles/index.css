@@ -867,3 +867,31 @@ button {
   font-size: 12px;
   font-weight: 600;
 }
+.pipeline-column.drop-active {
+  background: #dbeafe;
+  outline: 2px dashed var(--anchor-blue);
+}
+
+.pipeline-card {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.pipeline-card:active {
+  cursor: grabbing;
+}
+
+.pipeline-empty {
+  font-size: 12px;
+  color: var(--anchor-muted);
+  text-align: center;
+  padding: 14px 6px;
+  border: 1px dashed var(--anchor-border);
+  border-radius: 8px;
+}
+
+.dragging-overlay {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  cursor: grabbing;
+}

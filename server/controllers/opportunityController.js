@@ -1,63 +1,22 @@
 const Opportunity = require("../models/Opportunity");
-const Customer = require("../models/Customer");
 
-// GET /api/opportunities
+// GET /api/opportunities - returns pipeline grouped by stage plus a flat list
 exports.getOpportunities = async (req, res) => {
   try {
-    const { stage, search = "", page = 1, limit = 20 } = req.query;
+    const { owner } = req.query;
+    const query = owner ? { owner } : {};
 
-    const query = {
-      ...(stage ? { stage } : {}),
-      ...(search
-        ? {
-            title: {
-              $regex: search,
-              $options: "i",
-            },
-          }
-        : {}),
-    };
+    const opportunities = await Opportunity.find(query)
+      .populate("customer", "name company")
+      .populate("owner", "name")
+      .sort({ updatedAt: -1 });
 
-    const pageNumber = Number(page);
-    const limitNumber = Number(limit);
-    const skip = (pageNumber - 1) * limitNumber;
+    const pipeline = Opportunity.STAGES.reduce((acc, stage) => {
+      acc[stage] = opportunities.filter((o) => o.stage === stage);
+      return acc;
+    }, {});
 
-    const [opportunities, total] = await Promise.all([
-      Opportunity.find(query)
-        .populate("customer", "name email company")
-        .populate("owner", "name email")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limitNumber),
-
-      Opportunity.countDocuments(query),
-    ]);
-
-    res.json({
-      opportunities,
-      total,
-      page: pageNumber,
-      pages: Math.ceil(total / limitNumber),
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// GET /api/opportunities/:id
-exports.getOpportunity = async (req, res) => {
-  try {
-    const opportunity = await Opportunity.findById(req.params.id)
-      .populate("customer", "name email company")
-      .populate("owner", "name email");
-
-    if (!opportunity) {
-      return res.status(404).json({
-        message: "Opportunity not found",
-      });
-    }
-
-    res.json(opportunity);
+    res.json({ opportunities, pipeline, stages: Opportunity.STAGES });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -66,139 +25,48 @@ exports.getOpportunity = async (req, res) => {
 // POST /api/opportunities
 exports.createOpportunity = async (req, res) => {
   try {
-    const {
-      title,
-      customer,
-      value,
-      stage,
-      expectedCloseDate,
-      probability,
-      notes,
-    } = req.body;
-
-    if (!title || !customer) {
-      return res.status(400).json({
-        message: "title and customer are required",
-      });
-    }
-
-    const existingCustomer = await Customer.findById(customer);
-
-    if (!existingCustomer) {
-      return res.status(404).json({
-        message: "Customer not found",
-      });
-    }
-
-    const opportunity = await Opportunity.create({
-      title,
-      customer,
-      owner: req.user._id,
-      value,
-      stage,
-      expectedCloseDate,
-      probability,
-      notes,
-    });
-
-    const populatedOpportunity = await Opportunity.findById(
-      opportunity._id
-    )
-      .populate("customer", "name email company")
-      .populate("owner", "name email");
-
-    res.status(201).json(populatedOpportunity);
+    const opp = await Opportunity.create({ ...req.body, owner: req.body.owner || req.user._id });
+    res.status(201).json(opp);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
 
-// PUT /api/opportunities/:id
+// PUT /api/opportunities/:id - general update
 exports.updateOpportunity = async (req, res) => {
   try {
-    const opportunity = await Opportunity.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    )
-      .populate("customer", "name email company")
-      .populate("owner", "name email");
-
-    if (!opportunity) {
-      return res.status(404).json({
-        message: "Opportunity not found",
-      });
-    }
-
-    res.json(opportunity);
+    const opp = await Opportunity.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!opp) return res.status(404).json({ message: "Opportunity not found" });
+    res.json(opp);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
 
-// PATCH /api/opportunities/:id/stage
+// PATCH /api/opportunities/:id/stage - move card across the pipeline
 exports.updateStage = async (req, res) => {
   try {
     const { stage } = req.body;
-
-    const validStages = [
-      "new",
-      "contacted",
-      "qualified",
-      "proposal",
-      "negotiation",
-      "won",
-      "lost",
-    ];
-
-    if (!validStages.includes(stage)) {
-      return res.status(400).json({
-        message: "Invalid opportunity stage",
-      });
+    if (!Opportunity.STAGES.includes(stage)) {
+      return res.status(400).json({ message: `Invalid stage. Must be one of: ${Opportunity.STAGES.join(", ")}` });
     }
-
-    const opportunity = await Opportunity.findByIdAndUpdate(
-      req.params.id,
-      { stage },
-      {
-        new: true,
-        runValidators: true,
-      }
-    )
-      .populate("customer", "name email company")
-      .populate("owner", "name email");
-
-    if (!opportunity) {
-      return res.status(404).json({
-        message: "Opportunity not found",
-      });
-    }
-
-    res.json(opportunity);
+    const opp = await Opportunity.findByIdAndUpdate(req.params.id, { stage }, { new: true });
+    if (!opp) return res.status(404).json({ message: "Opportunity not found" });
+    res.json(opp);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
 // DELETE /api/opportunities/:id
 exports.deleteOpportunity = async (req, res) => {
   try {
-    const opportunity = await Opportunity.findByIdAndDelete(
-      req.params.id
-    );
-
-    if (!opportunity) {
-      return res.status(404).json({
-        message: "Opportunity not found",
-      });
-    }
-
-    res.json({
-      message: "Opportunity deleted successfully",
-    });
+    const opp = await Opportunity.findByIdAndDelete(req.params.id);
+    if (!opp) return res.status(404).json({ message: "Opportunity not found" });
+    res.json({ message: "Opportunity deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
